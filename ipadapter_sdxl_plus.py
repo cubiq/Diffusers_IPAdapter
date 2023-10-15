@@ -1,0 +1,172 @@
+
+from diffusers import StableDiffusionXLPipeline, DDIMScheduler
+
+import torch
+from PIL import Image
+
+import config as cfg
+from ip_adapter.ip_adapter import IPAdapter
+
+device = "cuda"
+
+pipe = StableDiffusionXLPipeline.from_single_file(cfg.sdxl_base_model_path, torch_dtype=torch.float16)
+pipe.watermark = None
+pipe.safety_checker = None
+pipe.feature_extractor = None
+pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
+pipe.to(device)
+
+image1 = Image.open("assets/input_venere.jpg")
+image2 = Image.open("assets/input_portrait.jpg")
+image3 = Image.open("assets/input_warrior.jpg")
+
+ip_adapter = IPAdapter(pipe, cfg.ipadapter_sdxl_plus_vit_h_path, cfg.image_encoder_sd15_path, device=device)
+
+generator = torch.Generator().manual_seed(1)
+
+"""
+SDXL Plus model with one reference image and text prompt
+"""
+prompt_embeds, negative_prompt_embeds, pooled_prompt_embeds, negative_pooled_prompt_embeds = ip_adapter.get_prompt_embeds(
+    image1,
+    prompt="beautiful renaissance woman",
+    negative_prompt="blurry, horror, worst quality, low quality",
+)
+
+image = pipe(
+    prompt_embeds=prompt_embeds,
+    negative_prompt_embeds=negative_prompt_embeds,
+    pooled_prompt_embeds=pooled_prompt_embeds,
+    negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+    num_inference_steps=30,
+    guidance_scale=5.0,
+    num_images_per_prompt=1,
+    height=1024,
+    width=1024,
+    generator=generator,
+).images[0]
+image.save("output/ipadapter_sdxl_plus.webp", lossless=True, quality=100)
+
+"""
+SDXL Plus model with three reference images and text prompt
+"""
+prompt_embeds, negative_prompt_embeds, pooled_prompt_embeds, negative_pooled_prompt_embeds = ip_adapter.get_prompt_embeds(
+    [image1, image2, image3],
+    prompt="beautiful renaissance warrior woman",
+    negative_prompt="blurry, horror, worst quality, low quality",
+)
+
+image = pipe(
+    prompt_embeds=prompt_embeds,
+    negative_prompt_embeds=negative_prompt_embeds,
+    pooled_prompt_embeds=pooled_prompt_embeds,
+    negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+    num_inference_steps=30,
+    guidance_scale=5.0,
+    num_images_per_prompt=1,
+    height=1024,
+    width=1024,
+    generator=generator,
+).images[0]
+image.save("output/ipadapter_sdxl_plus_multi.webp", lossless=True, quality=100)
+
+"""
+SDXL plus model with three reference images and noisy negative images
+Negative image can be anything but it seems to react better to very noisy images
+"""
+noise = Image.effect_noise((224, 224), 10)
+prompt_embeds, negative_prompt_embeds, pooled_prompt_embeds, negative_pooled_prompt_embeds = ip_adapter.get_prompt_embeds(
+    [image1, image2, image3],
+    prompt="beautiful renaissance warrior woman",
+    negative_prompt="blurry, horror, worst quality, low quality",
+    negative_images=[noise, noise, noise],
+)
+
+image = pipe(
+    prompt_embeds=prompt_embeds,
+    negative_prompt_embeds=negative_prompt_embeds,
+    pooled_prompt_embeds=pooled_prompt_embeds,
+    negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+    num_inference_steps=30,
+    guidance_scale=5.0,
+    num_images_per_prompt=1,
+    height=1024,
+    width=1024,
+    generator=generator,
+).images[0]
+image.save("output/ipadapter_sdxl_plus_noise.webp", lossless=True, quality=100)
+
+"""
+SDXL plus model with one reference image and text prompt
+"""
+prompt_embeds, negative_prompt_embeds, pooled_prompt_embeds, negative_pooled_prompt_embeds = ip_adapter.get_prompt_embeds(
+    image1,
+    prompt="beautiful woman wearing sunglasses",
+    negative_prompt="blurry, horror, worst quality, low quality",
+)
+ip_adapter.set_scale(.5)
+
+image = pipe(
+    prompt_embeds=prompt_embeds,
+    negative_prompt_embeds=negative_prompt_embeds,
+    pooled_prompt_embeds=pooled_prompt_embeds,
+    negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+    num_inference_steps=30,
+    guidance_scale=5.0,
+    num_images_per_prompt=1,
+    height=1024,
+    width=1024,
+    generator=generator,
+).images[0]
+image.save("output/ipadapter_sdxl_plus_text.webp", lossless=True, quality=100)
+
+
+"""
+SDXL Plus model with two weighted reference images and noise
+"""
+prompt_embeds, negative_prompt_embeds, pooled_prompt_embeds, negative_pooled_prompt_embeds = ip_adapter.get_prompt_embeds(
+    [image1, image2],
+    prompt="beautiful renaissance woman",
+    negative_prompt="blurry, horror, worst quality, low quality",
+    weight=[1.0, .9],
+    negative_images=[noise, noise],
+)
+ip_adapter.set_scale(1.0)
+image = pipe(
+    prompt_embeds=prompt_embeds,
+    negative_prompt_embeds=negative_prompt_embeds,
+    pooled_prompt_embeds=pooled_prompt_embeds,
+    negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+    num_inference_steps=30,
+    guidance_scale=4.0,
+    num_images_per_prompt=1,
+    height=1024,
+    width=1024,
+    generator=generator,
+).images[0]
+image.save("output/ipadapter_sdxl_plus_weight1.webp", lossless=True, quality=100)
+
+"""
+SDXL Plus model with two weighted reference images and noise
+"""
+prompt_embeds, negative_prompt_embeds, pooled_prompt_embeds, negative_pooled_prompt_embeds = ip_adapter.get_prompt_embeds(
+    [image1, image2],
+    prompt="beautiful renaissance woman",
+    negative_prompt="blurry, horror, worst quality, low quality",
+    weight=[.9, 1.0],
+    negative_images=[noise, noise],
+)
+
+image = pipe(
+    prompt_embeds=prompt_embeds,
+    negative_prompt_embeds=negative_prompt_embeds,
+    pooled_prompt_embeds=pooled_prompt_embeds,
+    negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+    num_inference_steps=30,
+    guidance_scale=4.0,
+    num_images_per_prompt=1,
+    height=1024,
+    width=1024,
+    generator=generator,
+).images[0]
+image.save("output/ipadapter_sdxl_plus_weight2.webp", lossless=True, quality=100)
