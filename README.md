@@ -75,7 +75,7 @@ Sending random noise negative images often helps. Check the example below
 
 | Reference (no negatives) | Basic Noise | Mandelbrot Noise |
 | --- | --- | --- |
-| <img src="output/ipadapter_sd15_multi.webp" width="256" height="256" alt="no negative" /> | <img src="output/ipadapter_sd15_noise.webp" width="256" height="256" alt="no negative" /> | <img src="output/ipadapter_sd15_madelbrot.webp" width="256" height="256" alt="no negative" /> |
+| <img src="output/ipadapter_sd15_multi.webp" width="256" alt="no negative" /> | <img src="output/ipadapter_sd15_noise.webp" width="256" alt="no negative" /> | <img src="output/ipadapter_sd15_madelbrot.webp" width="256" alt="no negative" /> |
 
 PS: The cover image at the top of the page is generated with mandelbrot noise
 
