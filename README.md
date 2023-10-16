@@ -69,7 +69,7 @@ image.save("image.webp", lossless=True, quality=100)
 
 The negatives are important, be sure to add at least "blurry" and possibly more ("low quality" and whatever).
 
-The IPAdapter models tend to burn the image, increase the number of steps and lower the guadance scale.
+The IPAdapter models tend to burn the image, increase the number of steps and lower the guidance scale.
 
 Sending random noise negative images often helps. Check the example below
 
