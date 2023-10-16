@@ -1,5 +1,4 @@
 import torch
-from diffusers import StableDiffusionPipeline
 from diffusers.pipelines.controlnet import MultiControlNetModel
 from transformers import CLIPVisionModelWithProjection, CLIPImageProcessor
 from PIL import Image
