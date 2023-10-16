@@ -4,7 +4,7 @@ This is an alternative implementation of the [IPAdapter](https://github.com/tenc
 
 - supports multiple input images (instead of just one)
 - supports weighting of input images
-- supports for negative input image (sending noisy negative images arguably grants better results)
+- supports negative input image (sending noisy negative images arguably grants better results)
 - shorter code, easier to maintain
 - streamlined workflow with only one main class (`IPAdapter`) instead of one for each model (base, sdxl, plus, ...)
 
